@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>محاسبه‌گر روزهای عونا خانم‌ها</title>
+  <script src="https://unpkg.com/jalaali-js@1.1.0/dist/jalaali.min.js"></script>
+  <script src="https://unpkg.com/hebcal"></script>
+  <style>
+    body {
+      background-color: #d0ecff;
+      font-family: 'B Nazanin', sans-serif;
+      font-size: 16px;
+      direction: rtl;
+      padding: 20px;
+    }
+    select, label {
+      margin: 5px;
+    }
+    .date-block, .output {
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .output {
+      border: 1px solid #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🔵 محاسبه‌گر روزهای عونا خانم‌ها</h2>
+
+<div class="date-block">
+  <label>تاریخ قاعدگی اخیر:</label><br>
+  <select id="recentYear"></select> /
+  <select id="recentMonth"></select> /
+  <select id="recentDay"></select>
+  <div id="recentHebrew"></div>
+</div>
+
+<div class="date-block">
+  <label>تاریخ قاعدگی قبلی:</label><br>
+  <select id="prevYear"></select> /
+  <select id="prevMonth"></select> /
+  <select id="prevDay"></select>
+  <div id="prevHebrew"></div>
+</div>
+
+<button onclick="calculate()">📅 محاسبه روزهای عونا</button>
+
+<div class="output" id="results"></div>
+
+<script>
+function fillSelect(id, start, end) {
+  const sel = document.getElementById(id);
+  for (let i = start; i <= end; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.innerText = i.toString().padStart(2, '0');
+    sel.appendChild(opt);
+  }
+}
+
+["recent", "prev"].forEach(prefix => {
+  fillSelect(prefix + "Year", 1390, 1410);
+  fillSelect(prefix + "Month", 1, 12);
+  fillSelect(prefix + "Day", 1, 31);
+
+  ["Year", "Month", "Day"].forEach(part => {
+    document.getElementById(prefix + part).addEventListener("change", () => updateHebrew(prefix));
+  });
+});
+
+function jalaliToGregorian(y, m, d) {
+  const g = jalaali.toGregorian(y, m, d);
+  return new Date(g.gy, g.gm - 1, g.gd);
+}
+
+function toJalaliStr(date) {
+  const j = jalaali.toJalaali(date);
+  const weekdays = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
+  const weekday = weekdays[date.getDay()];
+  return `${j.jy}/${j.jm.toString().padStart(2,'0')}/${j.jd.toString().padStart(2,'0')} - ${weekday}`;
+}
+
+function updateHebrew(idPrefix) {
+  const y = +document.getElementById(idPrefix + "Year").value;
+  const m = +document.getElementById(idPrefix + "Month").value;
+  const d = +document.getElementById(idPrefix + "Day").value;
+  if (y && m && d) {
+    const gDate = jalaliToGregorian(y, m, d);
+    const hebDate = new Hebcal.HDate(gDate);
+    document.getElementById(idPrefix + "Hebrew").innerText =
+      "📆 تاریخ عبری: " + hebDate.renderHebrewDate();
+  }
+}
+
+function calculate() {
+  const y1 = +document.getElementById("recentYear").value;
+  const m1 = +document.getElementById("recentMonth").value;
+  const d1 = +document.getElementById("recentDay").value;
+  const y2 = +document.getElementById("prevYear").value;
+  const m2 = +document.getElementById("prevMonth").value;
+  const d2 = +document.getElementById("prevDay").value;
+
+  if (!(y1 && m1 && d1 && y2 && m2 && d2)) {
+    alert("لطفاً هر دو تاریخ را کامل وارد کنید.");
+    return;
+  }
+
+  const recentDate = jalaliToGregorian(y1, m1, d1);
+  const prevDate = jalaliToGregorian(y2, m2, d2);
+  const dayDiff = Math.round((recentDate - prevDate) / (1000 * 60 * 60 * 24));
+
+  const result1 = new Date(recentDate); result1.setDate(result1.getDate() + 30);
+  const result2 = new Date(recentDate); result2.setDate(result2.getDate() + dayDiff);
+
+  const hebRecent = new Hebcal.HDate(recentDate);
+  const nextHebMonth = hebRecent.getMonth() + 1;
+  const nextHebYear = hebRecent.getMonth() === 12 ? hebRecent.getFullYear() + 1 : hebRecent.getFullYear();
+  const sameDayNextMonthHeb = new Hebcal.HDate(hebRecent.getDate(), nextHebMonth, nextHebYear);
+  const result3G = sameDayNextMonthHeb.greg();
+
+  const out = `
+    ✅ ۳۰ روز بعد: ${toJalaliStr(result1)} <br> 🕍 ${new Hebcal.HDate(result1).renderHebrewDate()}<br><br>
+    ✅ ${dayDiff} روز بعد از تاریخ اخیر: ${toJalaliStr(result2)} <br> 🕍 ${new Hebcal.HDate(result2).renderHebrewDate()}<br><br>
+    ✅ همان روز در ماه بعد عبری: ${toJalaliStr(result3G)} <br> 🕍 ${sameDayNextMonthHeb.renderHebrewDate()}
+  `;
+
+  document.getElementById("results").innerHTML = "<h3>🔻 نتایج:</h3>" + out;
+}
+
+</script>
+
+</body>
+</html>
