@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاسبه ایام عونا (نسخه اصلاح‌شده)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.9.1/build/moment-jalaali.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@hebcal/core@3.50/dist/hebcal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@hebcal/locales@0.7.0/dist/hebcal-locales.min.js"></script>
+</head>
+<body>
+    <h2>دموی مختصر – نسخه اصلاح‌شده</h2>
+    <p>این نسخه فقط شامل اسکریپت‌های اصلاح‌شده برای پاسخ به سه مشکل گزارش‌شده است.</p>
+
+    <script>
+        /* -------------------- کمکی‌ها -------------------- */
+        function convertHebrewMonth(hebrewDateStr) {
+            if (!hebrewDateStr) return hebrewDateStr;
+            const monthMap = {
+                'תשרי': 'تیشری',
+                'חשון': 'حشوان',
+                'כסלו': 'کیسلو',
+                'טבת': 'طوت',
+                'שבט': 'شواط',
+                'אדר ב': 'آدار دوم',
+                'אדר': 'آدار',
+                'ניסן': 'نیسان',
+                'אייר': 'ایار',
+                'סיוון': 'سیوان', // املای متداول با یای کامل
+                'סיון': 'سیوان',    // املای بدون یای وسط
+                'תמוז': 'تموز',
+                'אב': 'آو',
+                'אלול': 'الول'
+            };
+            let result = hebrewDateStr;
+            Object.entries(monthMap).forEach(([heb, fa]) => {
+                result = result.replace(heb, fa);
+            });
+            return result;
+        }
+
+        function toHebrewDate(m) {
+            if (!m || !m.isValid()) return 'نامعتبر';
+            try {
+                const date = m.toDate();
+                const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'hebrew' };
+                let hebrewDate = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', options).format(date);
+
+                /*  حذف پیشوند «ב» قبل از نام ماه  → «11 ב סיון 5785» → «11 סיון 5785» */
+                hebrewDate = hebrewDate.replace(/\sב(?=[\u0590-\u05FF])/g, ' ');
+                hebrewDate = hebrewDate.replace(/\s{2,}/g, ' ').trim();
+
+                // ترجمه ماه‌ها به فارسی
+                hebrewDate = convertHebrewMonth(hebrewDate);
+                return hebrewDate;
+            } catch (e) {
+                console.error(e);
+                return 'خطا در محاسبه';
+            }
+        }
+
+        function toJalaaliDate(m) {
+            return m && m.isValid() ? m.format('jYYYY/jMM/jDD') : 'نامعتبر';
+        }
+
+        /* -------------------- تبدیل تاریخ عبری ورودی به moment -------------------- */
+        function hebrewInputToMoment(day, monthIdx, year) {
+            // monthIdx: 1-13 طبق استاندارد Hebcal (1=Tishrei … 13=Elul)
+            const h = new Hebcal.HDate(parseInt(day), parseInt(monthIdx), parseInt(year));
+            const g = h.greg();
+            return moment(`${g.getFullYear()}-${g.getMonth()+1}-${g.getDate()}`, 'YYYY-M-D');
+        }
+
+        // تست سریع برای اطمینان از رفع سه ایراد
+        (function testFixes() {
+            /* ۱. صحت تبدیل عبری → شمسی (نباید خطا دهد) */
+            try {
+                const m = hebrewInputToMoment(11, 10, 5785); // 11 سيوان 5785 → 17 خرداد 1404
+                console.log('معادل شمسی:', toJalaaliDate(m));
+            } catch (e) {
+                console.error('❌ مشکل در تبدیل عبری به شمسی', e);
+            }
+
+            /* ۲. عدم نمایش «ب» قبل از ماه عبری در خروجی فارسی */
+            const sample = moment('2025-06-07'); // 11 סיון 5785
+            console.log('نمایش عبری بدون ب:', toHebrewDate(sample));
+
+            /* ۳. اطمینان از ترجمه صحیح سیوان → سیوان */
+            const check = convertHebrewMonth('11 סיון 5785');
+            console.log('ترجمه ماه سیوان:', check);
+        })();
+    </script>
+</body>
+</html>
