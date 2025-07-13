@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاسبه ایام عونا</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.9.1/build/moment-jalaali.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@hebcal/core@3.50/dist/hebcal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@hebcal/locales@0.7.0/dist/hebcal-locales.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        
+        header {
+            background: linear-gradient(90deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            border-bottom: 4px solid #3498db;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 18px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e7ff;
+        }
+        
+        /* تب‌های انتخاب تقویم */
+        .calendar-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            background: #e0e7ff;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .date-selector {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .date-selector:hover {
+            transform: translateY(-5px);
+        }
+        
+        .date-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+        }
+        
+        .date-title i {
+            color: #3498db;
+            font-size: 1.4rem;
+        }
+        
+        .select-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        select {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid #d1d8e0;
+            border-radius: 10px;
+            background: white;
+            font-size: 17px;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        .hebrew-display {
+            background: linear-gradient(to right, #eef5ff, #e6f0ff);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            text-align: center;
+            color: #2c3e50;
+            border: 1px dashed #a5c9ff;
+        }
+        
+        .hebrew-value {
+            font-weight: 700;
+            color: #2980b9;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #2980b9, #2c3e50);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            font-size: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: block;
+            margin: 25px auto 0;
+            width: 100%;
+            max-width: 350px;
+            transition: all 0.3s;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            letter-spacing: 0.5px;
+        }
+        
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(-2px);
+        }
+        
+        .results-section {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e7ff;
+        }
+        
+        .result-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+        
+        .result-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            border-radius: 2px;
+        }
+        
+        .result-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #f6f9ff 0%, #e6f0ff 100%);
+            border-radius: 18px;
+            padding: 25px;
+            flex: 1;
+            min-width: 250px;
+            border: 1px solid #d1e0ff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, #3498db, #2c3e50);
+        }
+        
+        .result-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2980b9;
+            font-weight: 700;
+            font-size: 1.3rem;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #c5d5ff;
+        }
+        
+        .date-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f4ff;
+        }
+        
+        .date-label {
+            font-weight: 600;
+            color: #4a5568;
+            flex: 1;
+        }
+        
+        .date-value {
+            font-weight: 700;
+            color: #2c3e50;
+            flex: 1;
+            text-align: left;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: white;
+            font-size: 1rem;
+            margin-top: auto;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .install-btn {
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 30px;
+            font-size: 18px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .date-selector {
+                min-width: 100%;
+            }
+            
+            .result-cards {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .tab {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+        }
+        
+        .info-box {
+            background: #e6f7ff;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        
+        .error-box {
+            background: #ffebee;
+            border-left: 5px solid #e74c3c;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+            align-items: flex-start;
+            gap: 15px;
+            font-size: 16px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .success-banner {
+            background: #e8f5e9;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+            align-items: flex-start;
+            gap: 15px;
+            font-size: 16px;
+        }
+        
+        .instructions {
+            background: #fff3e0;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #e67e22;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+        }
+        
+        .example-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+            border: 1px dashed #d1d8e0;
+        }
+        
+        .example-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .example-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .hebcal-logo {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-alt"></i> محاسبه دقیق ایام عونا</h1>
+            <div class="subtitle">محاسبه دقیق بر اساس تقویم عبری و شمسی با الگوریتم‌های پیشرفته</div>
+        </header>
+        
+        <div class="content">
+            <div class="instructions">
+                <h3><i class="fas fa-lightbulb"></i> راهنمای استفاده و توضیحات</h3>
+                <p><strong>روش محاسبه:</strong> این برنامه سه تاریخ مهم را بر اساس تاریخ قاعدگی آخر محاسبه می‌کند:</p>
+                <ol>
+                    <li>30 روز پس از قاعدگی آخر</li>
+                    <li>تاریخ قاعدگی آخر به اضافه فاصله دو قاعدگی</li>
+                    <li>همان روز در ماه بعد عبری</li>
+                </ol>
+                <p><strong>مثال:</strong> برای تاریخ 17 خرداد 1404 (معادل 11 سیوان 5785) - خروجی سوم خواهد بود: 11 تموز 5785</p>
+            </div>
+            
+            <div class="input-section">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i> 
+                    <div>لطفاً تاریخ دقیق دو قاعدگی آخر خود را وارد کنید. نتایج بر اساس محاسبات دقیق تقویم عبری و شمسی نمایش داده خواهد شد.</div>
+                </div>
+                
+                <div class="error-box" id="error-box">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <div><span id="error-message"></span></div>
+                </div>
+                
+                <div class="success-banner" id="success-banner">
+                    <i class="fas fa-check-circle"></i> 
+                    <div>محاسبات با موفقیت انجام شد. نتایج در بخش پایین نمایش داده شده است.</div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>در حال محاسبه، لطفاً چند لحظه صبر کنید...</p>
+                </div>
+                
+                <!-- تب‌های انتخاب نوع تقویم -->
+                <div class="calendar-tabs">
+                    <div class="tab active" data-tab="jalali">تقویم شمسی</div>
+                    <div class="tab" data-tab="hebrew">تقویم عبری</div>
+                </div>
+                
+                <!-- ورودی تقویم شمسی -->
+                <div class="tab-content active" id="jalali-input">
+                    <div class="input-group">
+                        <div class="date-selector">
+                            <div class="date-title">
+                                <i class="fas fa-calendar-week"></i>
+                                تاریخ قاعدگی ماه قبلی (شمسی)
+                            </div>
+                            <div class="select-row">
+                                <select id="prev-year">
+                                    <option value="">سال</option>
+                                </select>
+                                <select id="prev-month">
+                                    <option value="">ماه</option>
+                                    <option value="1">فروردین</option>
+                                    <option value="2">اردیبهشت</option>
+                                    <option value="3">خرداد</option>
+                                    <option value="4">تیر</option>
+                                    <option value="5">مرداد</option>
+                                    <option value="6">شهریور</option>
+                                    <option value="7">مهر</option>
+                                    <option value="8">آبان</option>
+                                    <option value="9">آذر</option>
+                                    <option value="10">دی</option>
+                                    <option value="11">بهمن</option>
+                                    <option value="12">اسفند</option>
+                                </select>
+                                <select id="prev-day">
+                                    <option value="">روز</option>
+                                </select>
+                            </div>
+                            <div class="hebrew-display">
+                                معادل عبری: <span class="hebrew-value" id="prev-hebrew">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="date-selector">
+                            <div class="date-title">
+                                <i class="fas fa-calendar-day"></i>
+                                تاریخ قاعدگی ماه جاری (شمسی)
+                            </div>
+                            <div class="select-row">
+                                <select id="last-year">
+                                    <option value="">سال</option>
+                                </select>
+                                <select id="last-month">
+                                    <option value="">ماه</option>
+                                    <option value="1">فروردین</option>
+                                    <option value="2">اردیبهشت</option>
+                                    <option value="3">خرداد</option>
+                                    <option value="4">تیر</option>
+                                    <option value="5">مرداد</option>
+                                    <option value="6">شهریور</option>
+                                    <option value="7">مهر</option>
+                                    <option value="8">آبان</option>
+                                    <option value="9">آذر</option>
+                                    <option value="10">دی</option>
+                                    <option value="11">بهمن</option>
+                                    <option value="12">اسفند</option>
+                                </select>
+                                <select id="last-day">
+                                    <option value="">روز</option>
+                                </select>
+                            </div>
+                            <div class="hebrew-display">
+                                معادل عبری: <span class="hebrew-value" id="last-hebrew">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ورودی تقویم عبری -->
+                <div class="tab-content" id="hebrew-input">
+                    <div class="input-group">
+                        <div class="date-selector">
+                            <div class="date-title">
+                                <i class="fas fa-calendar-week"></i>
+                                تاریخ قاعدگی ماه قبلی (عبری)
+                            </div>
+                            <div class="select-row">
+                                <select id="prev-year-he">
+                                    <option value="">سال</option>
+                                </select>
+                                <select id="prev-month-he">
+                                    <option value="">ماه</option>
+                                    <option value="8">نیسان</option>
+                                    <option value="9">ایار</option>
+                                    <option value="10">سیوان</option>
+                                    <option value="11">تموز</option>
+                                    <option value="12">آو</option>
+                                    <option value="13">الول</option>
+                                    <option value="1">تیشری</option>
+                                    <option value="2">حشوان</option>
+                                    <option value="3">کیسلو</option>
+                                    <option value="4">طوت</option>
+                                    <option value="5">شواط</option>
+                                    <option value="6">آدار</option>
+                                    <option value="7">آدار دوم</option>
+                                </select>
+                                <select id="prev-day-he">
+                                    <option value="">روز</option>
+                                </select>
+                            </div>
+                            <div class="hebrew-display">
+                                معادل شمسی: <span class="hebrew-value" id="prev-jalali">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="date-selector">
+                            <div class="date-title">
+                                <i class="fas fa-calendar-day"></i>
+                                تاریخ قاعدگی ماه جاری (عبری)
+                            </div>
+                            <div class="select-row">
+                                <select id="last-year-he">
+                                    <option value="">سال</option>
+                                </select>
+                                <select id="last-month-he">
+                                    <option value="">ماه</option>
+                                    <option value="8">نیسان</option>
+                                    <option value="9">ایار</option>
+                                    <option value="10">سیوان</option>
+                                    <option value="11">تموز</option>
+                                    <option value="12">آو</option>
+                                    <option value="13">الول</option>
+                                    <option value="1">تیشری</option>
+                                    <option value="2">حشوان</option>
+                                    <option value="3">کیسلو</option>
+                                    <option value="4">طوت</option>
+                                    <option value="5">شواط</option>
+                                    <option value="6">آدار</option>
+                                    <option value="7">آدار دوم</option>
+                                </select>
+                                <select id="last-day-he">
+                                    <option value="">روز</option>
+                                </select>
+                            </div>
+                            <div class="hebrew-display">
+                                معادل شمسی: <span class="hebrew-value" id="last-jalali">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="calculate-btn">
+                    <i class="fas fa-calculator"></i> محاسبه ایام عونا
+                </button>
+            </div>
+            
+            <div class="results-section">
+                <div class="result-title">
+                    <i class="fas fa-chart-line"></i>
+                    نتایج محاسبه
+                </div>
+                <div class="result-cards">
+                    <div class="result-card">
+                        <div class="card-title">1. 30 روز پس از قاعدگی آخر</div>
+                        <div class="date-row">
+                            <span class="date-label">تاریخ شمسی:</span>
+                            <span class="date-value" id="result1-jalali">-</span>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-label">تاریخ عبری:</span>
+                            <span class="date-value" id="result1-hebrew">-</span>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-label">روز هفته:</span>
+                            <span class="date-value" id="result1-weekday">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="card-title">2. قاعدگی آخر + فاصله دو قاعدگی</div>
+                        <div class="date-row">
+                            <span class="date-label">تاریخ شمسی:</span>
+                            <span class="date-value" id="result2-jalali">-</span>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-label">تاریخ عبری:</span>
+                            <span class="date-value" id="result2-hebrew">-</span>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-label">روز هفته:</span>
+                            <span class="date-value" id="result2-weekday">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="card-title">3. همان روز در ماه بعد عبری</div>
+                        <div class="date-row">
+                            <span class="date-label">تاریخ شمسی:</span>
+                            <span class="date-value" id="result3-jalali">-</span>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-label">تاریخ عبری:</span>
+                            <span class="date-value" id="result3-hebrew">-</span>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-label">روز هفته:</span>
+                            <span class="date-value" id="result3-weekday">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="example-section">
+                    <div class="example-title">
+                        <i class="fas fa-bell"></i> مثال محاسبه
+                    </div>
+                    <div class="example-row">
+                        <span>تاریخ ورودی: 17 خرداد 1404</span>
+                        <span>معادل عبری: 11 سیوان 5785</span>
+                    </div>
+                    <div class="example-row">
+                        <span>خروجی سوم: 11 تموز 5785</span>
+                        <span>معادل شمسی: 15 تیر 1404</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hebcal-logo">
+                محاسبات تقویم عبری با استفاده از کتابخانه Hebcal انجام می‌شود
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>برنامه محاسبه ایام عونا | طراحی شده برای استفاده راحت و دقیق</p>
+        <button class="install-btn" id="install-btn">
+            <i class="fas fa-download"></i> نصب برنامه (PWA)
+        </button>
+    </div>
+
+    <script>
+        // پر کردن سال‌ها و روزها
+        document.addEventListener('DOMContentLoaded', function() {
+            // افزودن سال جاری شمسی
+            const currentYear = moment().jYear();
+            let currentHebrewYear = 5785; // مقدار پیش‌فرض
+            
+            // پر کردن سال‌های شمسی
+            const jalaliYearSelectors = ['prev-year', 'last-year'];
+            jalaliYearSelectors.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">سال</option>';
+                for (let year = currentYear - 3; year <= currentYear + 3; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    select.appendChild(option);
+                }
+                select.value = currentYear;
+            });
+            
+            // پر کردن سال‌های عبری
+            const hebrewYearSelectors = ['prev-year-he', 'last-year-he'];
+            hebrewYearSelectors.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">سال</option>';
+                for (let year = currentHebrewYear - 3; year <= currentHebrewYear + 3; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    select.appendChild(option);
+                }
+                select.value = currentHebrewYear;
+            });
+            
+            // پر کردن روزها (1 تا 31)
+            const daySelectors = ['prev-day', 'last-day', 'prev-day-he', 'last-day-he'];
+            daySelectors.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">روز</option>';
+                for (let day = 1; day <= 31; day++) {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day;
+                    select.appendChild(option);
+                }
+                select.value = 1;
+            });
+            
+            // انتخاب ماه جاری به صورت پیش‌فرض
+            const currentMonth = moment().jMonth() + 1;
+            document.getElementById('prev-month').value = currentMonth;
+            document.getElementById('last-month').value = currentMonth;
+            
+            // به روزرسانی تاریخ عبری هنگام تغییر
+            document.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', updateDates);
+            });
+            
+            // مدیریت تب‌ها - اصلاح شده
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // حذف کلاس active از همه تب‌ها
+                    document.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // افزودن کلاس active به تب انتخاب شده
+                    this.classList.add('active');
+                    
+                    // مخفی کردن همه محتواها
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // نمایش محتوای مربوط به تب انتخاب شده
+                    const tabId = this.getAttribute('data-tab') + '-input';
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // به روزرسانی تاریخ‌ها پس از تغییر تب
+                    updateDates();
+                });
+            });
+            
+            // به روزرسانی اولیه تاریخ‌ها
+            updateDates();
+        });
+
+        // تابع تبدیل نام ماه‌های عبری به فارسی - اصلاح شده
+        function convertHebrewMonth(hebrewDateStr) {
+            if (!hebrewDateStr) return hebrewDateStr;
+            
+            const monthMap = {
+                'תשרי': 'تیشری',
+                'חשון': 'حشوان',
+                'כסלו': 'کیسلو',
+                'טבת': 'طوت',
+                'שבט': 'شواط',
+                'אדר': 'آدار',
+                'אדר א': 'آدار اول',
+                'אדר ב': 'آدار دوم',
+                'ניסן': 'نیسان',
+                'אייר': 'ایار',
+                'סיון': 'سیوان',  // اصلاح شده
+                'תמוז': 'تموز',
+                'אב': 'آو',
+                'אלול': 'الول'
+            };
+            
+            let result = hebrewDateStr;
+            for (const [heb, fa] of Object.entries(monthMap)) {
+                result = result.replace(heb, fa);
+            }
+            return result;
+        }
+        
+        // اعتبارسنجی تاریخ شمسی
+        function isValidJalaaliDate(year, month, day) {
+            if (!year || !month || !day) return false;
+            
+            // ایجاد تاریخ موقت
+            const m = moment(`${year}-${month}-${day}`, 'jYYYY-jM-jD', true);
+            
+            // بررسی صحت تاریخ
+            return m.isValid() && 
+                   m.jYear() === parseInt(year) && 
+                   m.jMonth() + 1 === parseInt(month) && 
+                   m.jDate() === parseInt(day);
+        }
+        
+        // تابع تبدیل تاریخ شمسی به میلادی
+        function jalaaliToMoment(jy, jm, jd) {
+            return moment(`${jy}-${jm}-${jd}`, 'jYYYY-jM-jD');
+        }
+        
+        // تابع تبدیل میلادی به عبری با حذف "ב" - اصلاح شده
+        function toHebrewDate(m) {
+            if (!m || !m.isValid()) return 'نامعتبر';
+            
+            try {
+                const date = m.toDate();
+                const options = { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    calendar: 'hebrew'
+                };
+                
+                // تبدیل تاریخ به رشته عبری
+                let hebrewDate = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', options).format(date);
+                
+                // حذف حرف "ב" از ابتدای نام ماه (الگوهای مختلف)
+                hebrewDate = hebrewDate.replace(/(\s*ב)/g, '');
+                hebrewDate = hebrewDate.replace(/(\s*ב')/g, '');
+                hebrewDate = hebrewDate.replace(/(\s*ב")/g, '');
+                
+                // تبدیل نام ماه‌ها به فارسی
+                hebrewDate = convertHebrewMonth(hebrewDate);
+                
+                return hebrewDate;
+            } catch (e) {
+                console.error('خطا در تبدیل تاریخ عبری:', e);
+                return 'خطا در محاسبه';
+            }
+        }
+        
+        // تابع تبدیل به تاریخ شمسی
+        function toJalaaliDate(m) {
+            if (!m || !m.isValid()) return 'نامعتبر';
+            return m.format('jYYYY/jMM/jDD');
+        }
+        
+        // تابع دریافت روز هفته
+        function getWeekday(m) {
+            if (!m || !m.isValid()) return 'نامعتبر';
+            
+            const weekdays = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه'];
+            return weekdays[m.day()];
+        }
+        
+        // تابع تبدیل تاریخ عبری به moment - اصلاح شده
+        function hebrewToMoment(year, month, day) {
+            try {
+                const monthNames = [
+                    'TISHREI', 'CHESHVAN', 'KISLEV', 'TEVET', 'SHVAT', 
+                    'ADAR_I', 'ADAR_II', 'NISAN', 'IYAR', 'SIVAN', 
+                    'TAMUZ', 'AV', 'ELUL'
+                ];
+                
+                const hebrewMonths = [
+                    'תשרי', 'חשון', 'כסלו', 'טבת', 'שבט', 
+                    'אדר', 'אדר ב', 'ניסן', 'אייר', 'סיון', 
+                    'תמוז', 'אב', 'אלול'
+                ];
+                
+                const monthName = hebrewMonths[parseInt(month) - 1];
+                const hDate = new Hebcal.HDate(
+                    parseInt(day), 
+                    monthName, 
+                    parseInt(year)
+                );
+                
+                const gregDate = hDate.greg();
+                return moment(gregDate);
+            } catch (e) {
+                console.error('خطا در تبدیل تاریخ عبری:', e);
+                return null;
+            }
+        }
+        
+        // به روزرسانی تاریخ‌های عبری و شمسی - اصلاح شده
+        function updateDates() {
+            // تاریخ قبل از آخر (شمسی)
+            const prevYear = document.getElementById('prev-year').value;
+            const prevMonth = document.getElementById('prev-month').value;
+            const prevDay = document.getElementById('prev-day').value;
+            
+            if (prevYear && prevMonth && prevDay) {
+                if (!isValidJalaaliDate(prevYear, prevMonth, prevDay)) {
+                    document.getElementById('prev-hebrew').textContent = 'نامعتبر';
+                } else {
+                    const prevDate = jalaaliToMoment(prevYear, prevMonth, prevDay);
+                    document.getElementById('prev-hebrew').textContent = toHebrewDate(prevDate);
+                }
+            } else {
+                document.getElementById('prev-hebrew').textContent = '-';
+            }
+            
+            // تاریخ آخر (شمسی)
+            const lastYear = document.getElementById('last-year').value;
+            const lastMonth = document.getElementById('last-month').value;
+            const lastDay = document.getElementById('last-day').value;
+            
+            if (lastYear && lastMonth && lastDay) {
+                if (!isValidJalaaliDate(lastYear, lastMonth, lastDay)) {
+                    document.getElementById('last-hebrew').textContent = 'نامعتبر';
+                } else {
+                    const lastDate = jalaaliToMoment(lastYear, lastMonth, lastDay);
+                    document.getElementById('last-hebrew').textContent = toHebrewDate(lastDate);
+                }
+            } else {
+                document.getElementById('last-hebrew').textContent = '-';
+            }
+            
+            // تاریخ قبل از آخر (عبری) - اصلاح شده
+            const prevYearHe = document.getElementById('prev-year-he').value;
+            const prevMonthHe = document.getElementById('prev-month-he').value;
+            const prevDayHe = document.getElementById('prev-day-he').value;
+            
+            if (prevYearHe && prevMonthHe && prevDayHe) {
+                const prevMoment = hebrewToMoment(prevYearHe, prevMonthHe, prevDayHe);
+                if (prevMoment) {
+                    document.getElementById('prev-jalali').textContent = toJalaaliDate(prevMoment);
+                } else {
+                    document.getElementById('prev-jalali').textContent = 'نامعتبر';
+                }
+            } else {
+                document.getElementById('prev-jalali').textContent = '-';
+            }
+            
+            // تاریخ آخر (عبری) - اصلاح شده
+            const lastYearHe = document.getElementById('last-year-he').value;
+            const lastMonthHe = document.getElementById('last-month-he').value;
+            const lastDayHe = document.getElementById('last-day-he').value;
+            
+            if (lastYearHe && lastMonthHe && lastDayHe) {
+                const lastMoment = hebrewToMoment(lastYearHe, lastMonthHe, lastDayHe);
+                if (lastMoment) {
+                    document.getElementById('last-jalali').textContent = toJalaaliDate(lastMoment);
+                } else {
+                    document.getElementById('last-jalali').textContent = 'نامعتبر';
+                }
+            } else {
+                document.getElementById('last-jalali').textContent = '-';
+            }
+        }
+        
+        // نمایش خطا
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-box').style.display = 'flex';
+            document.getElementById('success-banner').style.display = 'none';
+        }
+        
+        // نمایش موفقیت
+        function showSuccess() {
+            document.getElementById('error-box').style.display = 'none';
+            document.getElementById('success-banner').style.display = 'flex';
+        }
+        
+        // محاسبه ایام عونا - اصلاح شده
+        document.getElementById('calculate-btn').addEventListener('click', function() {
+            // پنهان کردن خطاهای قبلی
+            document.getElementById('error-box').style.display = 'none';
+            document.getElementById('success-banner').style.display = 'none';
+            
+            // نمایش اسپینر بارگذاری
+            document.getElementById('loading').style.display = 'block';
+            
+            // تأخیر برای نمایش اسپینر
+            setTimeout(() => {
+                try {
+                    let prevDate, lastDate;
+                    const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
+                    
+                    if (activeTab === 'jalali') {
+                        // خواندن تاریخ‌ها (شمسی)
+                        const prevYear = document.getElementById('prev-year').value;
+                        const prevMonth = document.getElementById('prev-month').value;
+                        const prevDay = document.getElementById('prev-day').value;
+                        
+                        const lastYear = document.getElementById('last-year').value;
+                        const lastMonth = document.getElementById('last-month').value;
+                        const lastDay = document.getElementById('last-day').value;
+                        
+                        // اعتبارسنجی ورودی‌ها
+                        if (!prevYear || !prevMonth || !prevDay || !lastYear || !lastMonth || !lastDay) {
+                            showError('لطفاً تمام فیلدها را پر کنید');
+                            document.getElementById('loading').style.display = 'none';
+                            return;
+                        }
+                        
+                        // اعتبارسنجی تاریخ شمسی
+                        if (!isValidJalaaliDate(prevYear, prevMonth, prevDay)) {
+                            showError('تاریخ قاعدگی قبل از آخر نامعتبر است');
+                            document.getElementById('loading').style.display = 'none';
+                            return;
+                        }
+                        
+                        if (!isValidJalaaliDate(lastYear, lastMonth, lastDay)) {
+                            showError('تاریخ قاعدگی آخر نامعتبر است');
+                            document.getElementById('loading').style.display = 'none';
+                            return;
+                        }
+                        
+                        // تبدیل به تاریخ
+                        prevDate = jalaaliToMoment(prevYear, prevMonth, prevDay);
+                        lastDate = jalaaliToMoment(lastYear, lastMonth, lastDay);
+                    } else {
+                        // خواندن تاریخ‌ها (عبری) - اصلاح شده
+                        const prevYearHe = document.getElementById('prev-year-he').value;
+                        const prevMonthHe = document.getElementById('prev-month-he').value;
+                        const prevDayHe = document.getElementById('prev-day-he').value;
+                        
+                        const lastYearHe = document.getElementById('last-year-he').value;
+                        const lastMonthHe = document.getElementById('last-month-he').value;
+                        const lastDayHe = document.getElementById('last-day-he').value;
+                        
+                        // اعتبارسنجی ورودی‌ها
+                        if (!prevYearHe || !prevMonthHe || !prevDayHe || !lastYearHe || !lastMonthHe || !lastDayHe) {
+                            showError('لطفاً تمام فیلدها را پر کنید');
+                            document.getElementById('loading').style.display = 'none';
+                            return;
+                        }
+                        
+                        // تبدیل به تاریخ میلادی
+                        prevDate = hebrewToMoment(prevYearHe, prevMonthHe, prevDayHe);
+                        lastDate = hebrewToMoment(lastYearHe, lastMonthHe, lastDayHe);
+                        
+                        if (!prevDate || !lastDate) {
+                            showError('تاریخ‌های عبری نامعتبر هستند');
+                            document.getElementById('loading').style.display = 'none';
+                            return;
+                        }
+                    }
+                    
+                    if (lastDate.isBefore(prevDate)) {
+                        showError('تاریخ قاعدگی آخر باید پس از تاریخ قاعدگی قبل از آخر باشد');
+                        document.getElementById('loading').style.display = 'none';
+                        return;
+                    }
+                    
+                    // محاسبه فاصله بین دو قاعدگی
+                    const diffDays = Math.floor(lastDate.diff(prevDate, 'days'));
+                    
+                    // 1. 30 روز پس از قاعدگی آخر
+                    const result1 = lastDate.clone().add(30, 'days');
+                    
+                    // 2. قاعدگی آخر + فاصله دو قاعدگی
+                    const result2 = lastDate.clone().add(diffDays, 'days');
+                    
+                    // 3. همان روز در ماه بعد عبری
+                    let result3;
+                    
+                    if (typeof Hebcal !== 'undefined') {
+                        // استفاده از تاریخ عبری مستقیم برای محاسبه
+                        const lastGregDate = lastDate.toDate();
+                        const lastHebrew = new Hebcal.HDate(lastGregDate);
+                        const hebrewDay = lastHebrew.getDate();
+                        const hebrewMonth = lastHebrew.getMonth();
+                        const hebrewYear = lastHebrew.getFullYear();
+
+                        let nextMonth = hebrewMonth + 1;
+                        let nextYear = hebrewYear;
+                        
+                        if (nextMonth > 13) {
+                            nextMonth = 1;
+                            nextYear++;
+                        }
+
+                        // دریافت تعداد روزهای ماه بعدی
+                        const nextMonthInfo = new Hebcal.HDate(1, nextMonth, nextYear);
+                        const daysInNextMonth = nextMonthInfo.daysInMonth();
+                        const dayToUse = Math.min(hebrewDay, daysInNextMonth);
+
+                        // ایجاد تاریخ عبری جدید
+                        const result3Hebrew = new Hebcal.HDate(dayToUse, nextMonth, nextYear);
+                        const result3Greg = result3Hebrew.greg();
+                        result3 = moment(result3Greg);
+                    } else {
+                        // روش جایگزین
+                        result3 = lastDate.clone().add(29, 'days');
+                    }
+                    
+                    // نمایش نتایج
+                    displayResult('result1', result1);
+                    displayResult('result2', result2);
+                    displayResult('result3', result3);
+                    
+                    // نمایش پیام موفقیت
+                    showSuccess();
+                    
+                    // پنهان کردن اسپینر بارگذاری
+                    document.getElementById('loading').style.display = 'none';
+                } catch (error) {
+                    // نمایش خطا در صورت بروز مشکل
+                    showError('خطا در محاسبات: ' + error.message);
+                    document.getElementById('loading').style.display = 'none';
+                    console.error(error);
+                }
+            }, 800);
+        });
+        
+        // نمایش نتیجه در کارت مربوطه
+        function displayResult(prefix, date) {
+            document.getElementById(`${prefix}-jalali`).textContent = toJalaaliDate(date);
+            document.getElementById(`${prefix}-hebrew`).textContent = toHebrewDate(date);
+            document.getElementById(`${prefix}-weekday`).textContent = getWeekday(date);
+        }
+        
+        // PWA نصب
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = 'inline-flex';
+        });
+        
+        document.getElementById('install-btn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('install-btn').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+    </script>
+</body>
+</html>
